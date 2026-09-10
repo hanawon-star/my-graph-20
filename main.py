@@ -82,7 +82,8 @@ try:
         # 사용자가 직접 입력하는 인사이트 공간
         user_insight_1 = st.text_input(
             "이 그래프로 알 수 있는 것 (한 문장 입력):",
-            value="선그래프로 내가 알아낸것"
+            value="선그래프로 내가 알아낸것",
+            key="insight_1"
         )
         
         # 입력한 내용 출력
@@ -92,17 +93,71 @@ try:
     st.markdown("---")
 
     # ==========================================
-    # 구역 2: 추후 그래프 추가용 구역
+    # 구역 2: 일관객 합계 Top 5 영화 비교
     # ==========================================
-    st.header("📌 Section 2. 박스오피스 상위권 누적 관객 흐름 (추가 예정)")
-    st.write("👉 *다음 버전에서 시간 흐름에 따른 상위권 영화들의 누적 관객 수 비교 그래프가 추가될 예정입니다.*")
+    st.header("📌 Section 2. 일관객 합계 Top 5 영화의 날짜별 추이 비교")
+    
+    # 데이터 기간 내 일관객 합계 기준 Top 5 영화 추출
+    top5_movies = (
+        df.groupby('영화명')['일관객']
+        .sum()
+        .nlargest(5)
+        .index.tolist()
+    )
+    
+    # Top 5 영화 데이터 필터링
+    top5_df = df[df['영화명'].isin(top5_movies)].sort_values('날짜')
+    
+    # Top 5 선 그래프 생성 (색상으로 영화 구분)
+    fig2 = px.line(
+        top5_df,
+        x='날짜',
+        y='일관객',
+        color='영화명',
+        title="기간 내 일관객 합계 상위 5개 영화의 날짜별 일관객 수 변화",
+        labels={'날짜': '날짜', '일관객': '일일 관객 수(명)', '영화명': '영화 제목'},
+        markers=True,
+        hover_data={'순위': True}
+    )
+    
+    fig2.update_traces(
+        hovertemplate="<b>영화명:</b> %{fullData.name}<br><b>날짜:</b> %{x|%Y-%m-%d}<br><b>일관객:</b> %{y:,}명<br><b>순위:</b> %{customdata[0]}위"
+    )
+    
+    fig2.update_layout(
+        xaxis_title="날짜",
+        yaxis_title="일관객 수 (명)",
+        hovermode="x unified",
+        template="plotly_white",
+        legend_title_text="영화 선택 (클릭하여 토글)",
+        legend=dict(
+            orient="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
+    )
+    
+    st.plotly_chart(fig2, use_container_width=True)
+    
+    # Section 2 사용자 인사이트 입력 공간
+    user_insight_2 = st.text_input(
+        "이 그래프로 알 수 있는 것 (한 문장 입력):",
+        value="",
+        key="insight_2"
+    )
+    
+    if user_insight_2:
+        st.info(f"💡 **이 그래프로 알 수 있는 것:** {user_insight_2}")
 
-    # 예시 공간 프레임
-    with st.expander("💡 다음 추가 예정 그래프 구역 미리보기"):
-        st.caption("이곳에 다음 시계열 분석 그래프가 들어갈 자리입니다.")
-        user_insight_2 = st.text_input("Section 2 인사이트 입력:", value="", key="insight_2")
-        if user_insight_2:
-            st.info(f"💡 **이 그래프로 알 수 있는 것:** {user_insight_2}")
+    st.markdown("---")
+
+    # ==========================================
+    # 구역 3: 추후 그래프 추가용 구역
+    # ==========================================
+    st.header("📌 Section 3. 추후 그래프 추가 구역")
+    st.write("👉 *다음 버전에서 추가 분석 그래프가 업로드될 예정입니다.*")
 
 except Exception as e:
     st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")

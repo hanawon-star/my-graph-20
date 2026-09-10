@@ -154,9 +154,79 @@ try:
     st.markdown("---")
 
     # ==========================================
-    # 구역 3: 추후 그래프 추가용 구역
+    # 구역 3: 날짜별 10위권 일관객 합계 영역 그래프
     # ==========================================
-    st.header("📌 Section 3. 추후 그래프 추가 구역")
+    st.header("📌 Section 3. 날짜별 Top 10 관객 수 합계 추이 (영역 그래프)")
+    
+    # 날짜별 10위권 일관객 합계 계산
+    daily_total = df.groupby('날짜')['일관객'].sum().reset_index()
+    daily_total = daily_total.sort_values('날짜')
+    
+    # 영역 그래프 (Area Chart) 생성
+    fig3 = px.area(
+        daily_total,
+        x='날짜',
+        y='일관객',
+        title="날짜별 박스오피스 Top 10 일일 Total 관객 수 추이",
+        labels={'날짜': '날짜', '일관객': '전체 일관객 수(명)'}
+    )
+    
+    # 일관객 합계가 가장 컸던 상위 3일 추출
+    top3_days = daily_total.nlargest(3, '일관객')
+    
+    # 그래프에 상위 3일 주석(Annotation) 표시
+    for idx, row in top3_days.reset_index().iterrows():
+        date_str = row['날짜'].strftime('%Y-%m-%d')
+        val_str = f"{row['일관객']:,}명"
+        
+        fig3.add_annotation(
+            x=row['날짜'],
+            y=row['일관객'],
+            text=f"<b>TOP {idx+1}</b><br>{date_str}<br>({val_str})",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=2,
+            arrowcolor="#E50914",
+            ax=0,
+            ay=-40,
+            bgcolor="#FFFFFF",
+            bordercolor="#E50914",
+            borderwidth=1,
+            font=dict(size=11)
+        )
+    
+    fig3.update_traces(
+        hovertemplate="<b>날짜:</b> %{x|%Y-%m-%d}<br><b>Top10 관객 합계:</b> %{y:,}명",
+        fillcolor="rgba(229, 9, 20, 0.3)",
+        line_color="#E50914"
+    )
+    
+    fig3.update_layout(
+        xaxis_title="날짜",
+        yaxis_title="10위권 관객 수 합계 (명)",
+        hovermode="x unified",
+        template="plotly_white"
+    )
+    
+    st.plotly_chart(fig3, use_container_width=True)
+    
+    # Section 3 사용자 인사이트 입력 공간
+    user_insight_3 = st.text_input(
+        "이 그래프로 알 수 있는 것 (한 문장 입력):",
+        value="",
+        key="insight_3"
+    )
+    
+    if user_insight_3:
+        st.info(f"💡 **이 그래프로 알 수 있는 것:** {user_insight_3}")
+
+    st.markdown("---")
+
+    # ==========================================
+    # 구역 4: 추후 그래프 추가용 구역
+    # ==========================================
+    st.header("📌 Section 4. 추후 그래프 추가 구역")
     st.write("👉 *다음 버전에서 추가 분석 그래프가 업로드될 예정입니다.*")
 
 except Exception as e:

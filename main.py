@@ -131,7 +131,7 @@ try:
         template="plotly_white",
         legend_title_text="영화 선택 (클릭하여 토글)",
         legend=dict(
-            orient="h",
+            orientation="h",
             yanchor="bottom",
             y=1.02,
             xanchor="right",

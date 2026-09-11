@@ -224,9 +224,65 @@ try:
     st.markdown("---")
 
     # ==========================================
-    # 구역 4: 추후 그래프 추가용 구역
+    # 구역 4: 기간 내 총 관객 수 TOP 10 가로 막대그래프
     # ==========================================
-    st.header("📌 Section 4. 추후 그래프 추가 구역")
+    st.header("📌 Section 4. 기간 내 총 관객 수 TOP 10 영화 (가로 막대그래프)")
+    
+    # 영화별 일관객 합계 및 10위권 진입 일수(날짜 수) 집계
+    top10_bar_df = (
+        df.groupby('영화명')
+        .agg(
+            총일관객=('일관객', 'sum'),
+            진입일수=('날짜', 'nunique')
+        )
+        .reset_index()
+        .nlargest(10, '총일관객')
+        .sort_values('총일관객', ascending=True)  # Plotly 가로 막대그래프에서는 오름차순 정렬해야 위쪽이 가장 큼
+    )
+    
+    # 가로 막대그래프 생성
+    fig4 = px.bar(
+        top10_bar_df,
+        x='총일관객',
+        y='영화명',
+        orientation='h',
+        title="기간 내 일관객 합계 TOP 10 영화 목록",
+        labels={'총일관객': '총 관객 수 (명)', '영화명': '영화 제목'},
+        text_auto=',d'
+    )
+    
+    # 호버 툴팁 및 막대 스타일 설정
+    fig4.update_traces(
+        hovertemplate="<b>영화명:</b> %{y}<br><b>기간 내 총 일관객:</b> %{x:,}명<br><b>10위권 진입 일수:</b> %{customdata[0]}일",
+        customdata=top10_bar_df[['진입일수']],
+        marker_color="#E50914"
+    )
+    
+    fig4.update_layout(
+        xaxis_title="총 관객 수 (명)",
+        yaxis_title="영화 제목",
+        template="plotly_white",
+        height=500
+    )
+    
+    st.plotly_chart(fig4, use_container_width=True)
+    
+    # Section 4 사용자 인사이트 입력 공간
+    user_insight_4 = st.text_input(
+        "이 그래프로 알 수 있는 것 (한 문장 입력):",
+        value="",
+        key="insight_4"
+    )
+    
+    if user_insight_4:
+        st.info(f"💡 **이 그래프로 알 수 있는 것:** {user_insight_4}")
+
+    st.markdown("---")
+
+    # ==========================================
+    # 구역 5: 추후 그래프 추가용 구역
+    # ==========================================
+    st.header("📌 Section 5. 추후 그래프 추가 구역")
     st.write("👉 *다음 버전에서 추가 분석 그래프가 업로드될 예정입니다.*")
 
 except Exception as e:

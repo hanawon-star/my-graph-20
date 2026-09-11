@@ -237,7 +237,7 @@ try:
         )
         .reset_index()
         .nlargest(10, '총일관객')
-        .sort_values('총일관객', ascending=True)  # Plotly 가로 막대그래프에서는 오름차순 정렬해야 위쪽이 가장 큼
+        .sort_values('총일관객', ascending=True)
     )
     
     # 가로 막대그래프 생성
@@ -280,9 +280,75 @@ try:
     st.markdown("---")
 
     # ==========================================
-    # 구역 5: 추후 그래프 추가용 구역
+    # 구역 5: 월×요일별 일관객 합계 히트맵
     # ==========================================
-    st.header("📌 Section 5. 추후 그래프 추가 구역")
+    st.header("📌 Section 5. 월×요일별 일관객 합계 분포 (히트맵)")
+    
+    # 날짜에서 월, 요일 추출
+    df_heatmap = df.copy()
+    df_heatmap['월'] = df_heatmap['날짜'].dt.month.astype(str) + "월"
+    
+    # 요일 한글 변환 및 순서 정의 (월요일 ~ 일요일)
+    weekday_map = {0: '월요일', 1: '화요일', 2: '수요일', 3: '목요일', 4: '금요일', 5: '토요일', 6: '일요일'}
+    df_heatmap['요일'] = df_heatmap['날짜'].dt.weekday.map(weekday_map)
+    
+    days_order = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일']
+    
+    # 월×요일별 일관객 합계 Pivot Table 작성
+    pivot_df = df_heatmap.pivot_table(
+        index='월',
+        columns='요일',
+        values='일관객',
+        aggfunc='sum'
+    ).fillna(0)
+    
+    # 요일 순서 정렬
+    pivot_df = pivot_df.reindex(columns=days_order)
+    
+    # 월 순서 정렬 (숫자 기준 1월~12월)
+    month_order = [f"{m}월" for m in range(1, 13) if f"{m}월" in pivot_df.index]
+    pivot_df = pivot_df.reindex(index=month_order)
+    
+    # Plotly imshow 히트맵 생성
+    fig5 = px.imshow(
+        pivot_df,
+        labels=dict(x="요일", y="월", color="일관객 합계 (명)"),
+        x=days_order,
+        y=pivot_df.index,
+        color_continuous_scale="Reds",
+        title="월 및 요일별 Box Office 일관객 합계 히트맵",
+        text_auto=',.0f'
+    )
+    
+    fig5.update_traces(
+        hovertemplate="<b>%{y} %{x}</b><br>총 관객 수: %{z:,}명"
+    )
+    
+    fig5.update_layout(
+        xaxis_title="요일",
+        yaxis_title="월",
+        template="plotly_white",
+        coloraxis_colorbar=dict(title="관객 수 (명)")
+    )
+    
+    st.plotly_chart(fig5, use_container_width=True)
+    
+    # Section 5 사용자 인사이트 입력 공간
+    user_insight_5 = st.text_input(
+        "이 그래프로 알 수 있는 것 (한 문장 입력):",
+        value="",
+        key="insight_5"
+    )
+    
+    if user_insight_5:
+        st.info(f"💡 **이 그래프로 알 수 있는 것:** {user_insight_5}")
+
+    st.markdown("---")
+
+    # ==========================================
+    # 구역 6: 추후 그래프 추가용 구역
+    # ==========================================
+    st.header("📌 Section 6. 추후 그래프 추가 구역")
     st.write("👉 *다음 버전에서 추가 분석 그래프가 업로드될 예정입니다.*")
 
 except Exception as e:
